@@ -1,1 +1,4 @@
 DockerSC2Runner/Bots/
+.vs/
+DockerSC2Runner/bin/
+DockerSC2Runner/obj/

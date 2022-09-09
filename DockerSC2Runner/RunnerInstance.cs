@@ -53,20 +53,24 @@ namespace DockerSC2Runner
 
             Console.WriteLine($"Starting game: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}");
 
-            Process p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.FileName = "cmd.exe";
-            p.StartInfo.WorkingDirectory = folder;
-            p.StartInfo.Arguments = "/C docker compose up";
-            p.Start();
-            var output = await p.StandardOutput.ReadToEndAsync();
-            await p.WaitForExitAsync();
+            DateTime start = DateTime.Now;
 
-            Results.Add(new GameSummary(output, map));
+            // Run
+            {
+                Process p = new Process();
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.FileName = "cmd.exe";
+                p.StartInfo.WorkingDirectory = folder;
+                p.StartInfo.Arguments = "/C docker compose up";
+                p.Start();
+                var output = await p.StandardOutput.ReadToEndAsync();
+                await p.WaitForExitAsync();
 
-            Console.WriteLine($"Game finished: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}, result {Results.Last().Result}, winner {Results.Last().Winner}");
+                Results.Add(new GameSummary(output, map, DateTime.Now - start));
 
+                Console.WriteLine($"Game finished: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
+            }
             IsRunning = false;
         }
     }
