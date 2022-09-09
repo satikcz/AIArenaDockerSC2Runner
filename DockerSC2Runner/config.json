@@ -1,0 +1,8 @@
+﻿{
+	"RunnersFolder": "C:\\Temp\\Docker\\SC2\\MultiRunner",
+	"Maps": "2000AtmospheresAIE,BerlingradAIE,BlackburnAIE,CuriousMindsAIE,GlitteringAshesAIE,HardwireAIE",
+	"RunnerCount": 8,
+	"MatchCount": 50,
+	"Bot1Name": "basic_bot",
+	"Bot2Name": "loser_bot"
+}
