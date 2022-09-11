@@ -12,4 +12,9 @@ if (runnerCfg == null)
 var runner = new RunnerManager(runnerCfg);
 runner.Run();
 
-Console.ReadLine();
+Console.Beep();
+
+if (runnerCfg.StopOnFinish)
+{
+    Console.ReadLine();
+}

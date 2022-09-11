@@ -70,8 +70,37 @@ namespace DockerSC2Runner
                 Results.Add(new GameSummary(output, map, DateTime.Now - start));
 
                 Console.WriteLine($"Game finished: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
+
+                SaveReplaysAndLogs(gameId, folder);
             }
             IsRunning = false;
+        }
+
+        private void SaveReplaysAndLogs(int gameId, string folder)
+        {
+            try
+            {
+                var replayFolder = Path.Combine(folder, "replays");
+                var logFolder = Path.Combine(folder, @"logs");
+
+                var archiveFolder = Path.Combine(cfg.ResultsFolder, cfg.Start.ToString("yyyy-MM-dd-hh-mm-ss"), $"game_{gameId}");
+
+                // Logs
+                Directory.CreateDirectory(Path.Combine(cfg.ResultsFolder, cfg.Start.ToString("yyyy-MM-dd-hh-mm-ss")));
+                logFolder = Directory.EnumerateDirectories(logFolder).First();
+                Directory.Move(logFolder, archiveFolder);
+
+                // Replays
+                var replayFile = Directory.EnumerateFiles(replayFolder, "*.SC2Replay").First();
+                File.Move(replayFile, Path.Combine(archiveFolder, $"game{gameId}.SC2Replay"));
+
+                // Game result
+                File.WriteAllText(Path.Combine(archiveFolder, "result.txt"), Results.Last().ToString());
+            }
+            catch
+            {
+
+            }
         }
     }
 }
