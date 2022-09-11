@@ -1,7 +1,7 @@
 ﻿{
-	"Bot1Name": "basic_bot",
-	"Bot2Name": "loser_bot",
-	"MatchCount": 16,
+	"Bot1Name": "DadBot",
+	"Bot2Name": "DadBotOld",
+	"MatchCount": 48,
 	"RunnerCount": 8,
 	"Maps": "2000AtmospheresAIE,BerlingradAIE,BlackburnAIE,CuriousMindsAIE,GlitteringAshesAIE,HardwireAIE",
 	"RunnersFolder": "C:\\Temp\\Docker\\SC2\\MultiRunner",
