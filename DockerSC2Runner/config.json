@@ -1,6 +1,6 @@
 ﻿{
-	"Bot1Name": "DadBot",
-	"Bot2Name": "DadBotOld",
+	"Bot1Name": "basic_bot",
+	"Bot2Name": "loser_bot",
 	"MatchCount": 48,
 	"RunnerCount": 8,
 	"Maps": "2000AtmospheresAIE,BerlingradAIE,BlackburnAIE,CuriousMindsAIE,GlitteringAshesAIE,HardwireAIE",
