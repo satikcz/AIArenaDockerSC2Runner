@@ -94,7 +94,7 @@ namespace DockerSC2Runner
             }
 
             Console.WriteLine(sb.ToString());
-            File.WriteAllText("results.txt", sb.ToString());
+            File.WriteAllText(Path.Combine(cfg.ResultsFolder, cfg.Start.ToString("yyyy-MM-dd-hh-mm-ss"), "results.txt"), sb.ToString());
         }
 
         private async Task PrepareRunnerAsync(int i)
