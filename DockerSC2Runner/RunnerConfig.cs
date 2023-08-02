@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DockerSC2Runner
+﻿namespace DockerSC2Runner
 {
     public class RunnerConfig
     {
@@ -13,6 +7,8 @@ namespace DockerSC2Runner
         /// </summary>
         public const string BotsFolder = "Bots";
         public const string BotJsonFile = "ladderbots.json";
+
+        public const string LocalPlayBootstrapGitFolder = "Local";
 
         public string RunnersFolder { get; set; } = @"C:\Temp\Docker\SC2\MultiRunner";
         public string ResultsFolder { get; set; } = @"C:\Temp\Docker\SC2\MultiRunner\Results";

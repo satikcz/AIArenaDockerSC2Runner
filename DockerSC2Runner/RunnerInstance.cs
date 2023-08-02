@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text;
-
-namespace DockerSC2Runner
+﻿namespace DockerSC2Runner
 {
     public class RunnerInstance
     {
@@ -38,8 +33,8 @@ namespace DockerSC2Runner
         private void PrepareMatchesFile(string map)
         {
             var sb = new StringBuilder(500);
-            sb.AppendLine("# Bot1 name, Bot1 race, Bot1 type, Bot2 name, Bot2 race, Bot2 type, Map");
-            sb.AppendLine($"{cfg.Bot1Name},{bot1.Race[0]},{bot1.Type},{cfg.Bot2Name},{bot2.Race[0]},{bot2.Type},{map}");
+            sb.AppendLine("# Bot1 ID, Bot1 name, Bot1 race, Bot1 type, Bot2 ID, Bot2 name, Bot2 race, Bot2 type, Map");
+            sb.AppendLine($"1,{cfg.Bot1Name},{bot1.Race[0]},{bot1.Type},2,{cfg.Bot2Name},{bot2.Race[0]},{bot2.Type},{map}");
 
             File.WriteAllText(Path.Combine(folder, "matches"), sb.ToString());
         }
@@ -51,25 +46,29 @@ namespace DockerSC2Runner
 
             PrepareMatchesFile(map);
 
-            Console.WriteLine($"Starting game: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}");
+            Console.WriteLine($"Starting game: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}");
 
             DateTime start = DateTime.Now;
 
             // Run
             {
-                Process p = new Process();
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.RedirectStandardOutput = true;
+                using Process p = new Process();
+                p.StartInfo.UseShellExecute = true;
+                p.StartInfo.RedirectStandardOutput = false;
                 p.StartInfo.FileName = "cmd.exe";
+                p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.WorkingDirectory = folder;
                 p.StartInfo.Arguments = "/C docker compose up";
                 p.Start();
-                var output = await p.StandardOutput.ReadToEndAsync();
+                //var output = await p.StandardOutput.ReadToEndAsync();
                 await p.WaitForExitAsync();
 
-                Results.Add(new GameSummary(output, map, DateTime.Now - start));
+                var results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
 
-                Console.WriteLine($"Game finished: {gameId + 1}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
+                if (results is not null && results.results.Any())
+                    Results.Add(new GameSummary(results.results.Last(), map, DateTime.Now - start, cfg.Bot1Name, cfg.Bot2Name));
+
+                Console.WriteLine($"Game finished: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
 
                 SaveReplaysAndLogs(gameId, folder);
             }
@@ -97,9 +96,9 @@ namespace DockerSC2Runner
                 // Game result
                 File.WriteAllText(Path.Combine(archiveFolder, "result.txt"), Results.Last().ToString());
             }
-            catch
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"   !!! Exception when saving logs or replay: {ex.Message}");
             }
         }
     }

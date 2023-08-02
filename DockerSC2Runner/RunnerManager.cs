@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Text;
-
-namespace DockerSC2Runner
+﻿namespace DockerSC2Runner
 {
     public class RunnerManager
     {
@@ -24,6 +20,9 @@ namespace DockerSC2Runner
 
         public void Prepare()
         {
+            BootstrapGitClonner bootstrap = new BootstrapGitClonner();
+            bootstrap.CloneBootstrap(Directory.GetCurrentDirectory());
+
             for (int i = 0; i < cfg.RunnerCount; i++)
             {
                 _ = PrepareRunnerAsync(i + 1);
@@ -40,7 +39,7 @@ namespace DockerSC2Runner
         {
             DateTime start = DateTime.Now;
 
-            for (int iGame = 0; iGame < cfg.MatchCount; iGame++)
+            for (int iGame = 1; iGame <= cfg.MatchCount; iGame++)
             {
                 RunnerInstance? freeRunner = null;
                 while (freeRunner == null)
@@ -126,7 +125,7 @@ namespace DockerSC2Runner
                 Directory.Delete(folder, true);
             }
 
-            CopyFilesRecursively("ArenaClient", folder);
+            CopyFilesRecursively("local-play-bootstrap", folder);
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot1Name));
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot2Name));
 

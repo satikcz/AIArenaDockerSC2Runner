@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using System.Text.RegularExpressions;
-
-namespace DockerSC2Runner
+﻿namespace DockerSC2Runner
 {
     public class GameSummary
     {
@@ -15,21 +12,25 @@ namespace DockerSC2Runner
 
         public TimeSpan GameLength => Helpers.ConvertGameLength(Frames);
 
-        public GameSummary(string result, string map, TimeSpan realTime)
+        public GameSummary(MatchResult result, string map, TimeSpan realTime, string player1, string player2)
         {
             try
             {
-                Result = Enum.Parse<GameResult>(Regex.Matches(result, @"\|\s*Result\s*=\s*(\w+)\s*\n")[0].Groups[1].Value);
-                Winner = Regex.Matches(result, @"\|\s*Winner\s*=\s*(.+)\s*\n")[0].Groups[1].Value;
-                Frames = int.Parse(Regex.Matches(result, @"\|\s*GameTime\s*=\s*(\d+)\s*\n")[0].Groups[1].Value);
-                Bot1AvgStepTime = 1000f * float.Parse(Regex.Matches(result, @"\|\s*Bot1AvgStepTime\s*=\s*(\d*\.\d*)\s*\n")[0].Groups[1].Value, CultureInfo.InvariantCulture);
-                Bot2AvgStepTime = 1000f * float.Parse(Regex.Matches(result, @"\|\s*Bot2AvgStepTime\s*=\s*(\d*\.\d*)\s*\n")[0].Groups[1].Value, CultureInfo.InvariantCulture);
+                Result = Enum.Parse<GameResult>(result.type);
+                Frames = result.game_steps;
+                Bot1AvgStepTime = 1000f * result.bot1_avg_step_time;
+                Bot2AvgStepTime = 1000f * result.bot2_avg_step_time;
                 Map = map;
                 RealTime = realTime;
-            }
-            catch
-            {
 
+                if (Result == GameResult.Error || Result == GameResult.InitializationError || Result == GameResult.Tie || Result == GameResult.Unknown)
+                    Winner = "Draw";
+                else
+                    Winner = Result == GameResult.Player1Win || Result == GameResult.Player2Crash ? player1 : player2;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"   !!! Exception when parsing game result: {ex.Message}");
             }
             Map = map;
         }

@@ -1,5 +1,11 @@
-﻿using DockerSC2Runner;
-using System.Text.Json;
+﻿global using DockerSC2Runner;
+global using System.Text.Json;
+global using DockerSC2Runner.Results;
+global using System;
+global using System.Diagnostics;
+global using System.Reflection;
+global using System.Text;
+global using System.ComponentModel;
 
 var runnerCfg = JsonSerializer.Deserialize<RunnerConfig>(File.ReadAllText("config.json"));
 
