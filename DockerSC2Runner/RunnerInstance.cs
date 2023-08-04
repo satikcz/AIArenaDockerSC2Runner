@@ -50,28 +50,18 @@
 
             DateTime start = DateTime.Now;
 
-            // Run
+            var res = await CLI.RunAsync($"docker compose -p runner{runnerIndex} up", folder);
+
+            var results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
+
+            if (results is not null && results.results.Any())
             {
-                using Process p = new Process();
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.RedirectStandardOutput = false;
-                p.StartInfo.FileName = "cmd.exe";
-                p.StartInfo.CreateNoWindow = true;
-                p.StartInfo.WorkingDirectory = folder;
-                p.StartInfo.Arguments = $"/C docker compose up";
-                p.Start();
-                //var output = await p.StandardOutput.ReadToEndAsync();
-                await p.WaitForExitAsync();
-
-                var results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
-
-                if (results is not null && results.results.Any())
-                {
-                    Results.Add(new GameSummary(results.results.Last(), map, DateTime.Now - start, cfg.Bot1Name, cfg.Bot2Name));
-                    Console.WriteLine($"Game finished: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
-                    SaveReplaysAndLogs(gameId, folder);
-                }
-
+                Results.Add(new GameSummary(results.results.Last(), map, DateTime.Now - start, cfg.Bot1Name, cfg.Bot2Name));
+                Console.WriteLine($"Game finished: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
+                SaveReplaysAndLogs(gameId, folder);
+            }
+            else
+            {
                 Console.WriteLine($"Game failed: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}, {DateTime.Now - start:hh\\:mm\\:ss}");
             }
             IsRunning = false;

@@ -9,45 +9,19 @@
         {
             try
             {
+                string res = string.Empty;
+                if (!Directory.Exists("local-play-bootstrap"))
                 {
-                    using Process p = new Process();
-                    p.StartInfo.UseShellExecute = false;
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.FileName = "git";
-                    p.StartInfo.WorkingDirectory = workingDir;
-                    p.StartInfo.CreateNoWindow = true;
-
-                    if (!Directory.Exists("local-play-bootstrap"))
-                    {
-                        Console.WriteLine($"Clonning bootstrap from {repoPath}, please wait...");
-                        p.StartInfo.Arguments = $"clone {repoPath} --recurse-submodules";
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Pulling latest bootstrap version...");
-                        p.StartInfo.Arguments = $"pull --recurse-submodules";
-                    }
-
-                    p.Start();
-                    p.WaitForExit();
-                    var output = p.StandardOutput.ReadToEnd();
-                    Console.WriteLine($"Bootstrap result: {output}");
+                    res = CLI.Run($"git clone {repoPath} --recurse-submodules", workingDir);
+                }
+                else
+                {
+                    res = CLI.Run("git pull --recurse-submodules", workingDir);
                 }
 
-                {
-                    using Process p = new Process();
-                    p.StartInfo.UseShellExecute = false;
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.FileName = "git";
-                    p.StartInfo.WorkingDirectory = workingDir + "/local-play-bootstrap";
-                    p.StartInfo.CreateNoWindow = true;
-                    p.StartInfo.Arguments = $"reset --hard 0693cf9098a0ea35546f999677a85ec874bb6173";
+                Console.WriteLine($"Bootstrap result: {res}");
 
-                    p.Start();
-                    p.WaitForExit();
-                    var output = p.StandardOutput.ReadToEnd();
-                    Console.WriteLine($"Set to 0693cf9098a0ea35546f999677a85ec874bb6173");
-                }
+                res = CLI.Run("git reset --hard 0693cf9098a0ea35546f999677a85ec874bb6173", workingDir + "/local-play-bootstrap");
             }
             catch (Exception ex) 
             {

@@ -70,13 +70,13 @@
         {
             var sb = new StringBuilder(10000);
 
-            sb.AppendLine(new String('=', 20));
+            sb.AppendLine(new string('=', 20));
             int index = 1;
             foreach (GameSummary summary in results)
             {
                 sb.AppendLine($"{(index++).ToString().PadLeft(3)}/{results.Count()} {summary}");
             }
-            sb.AppendLine(new String('=', 20));
+            sb.AppendLine(new string('=', 20));
             sb.AppendLine($"Average game length: {results.Average(x => x.Frames)} frames (Min {results.Min(x => x.Frames)} frames Max {results.Max(x => x.Frames)} frames)");
             sb.AppendLine($"Average game length: {Helpers.ConvertGameLength((int)results.Average(x => x.Frames)):hh\\:mm\\:ss} (Min {Helpers.ConvertGameLength((int)results.Min(x => x.Frames)):hh\\:mm\\:ss} Max {Helpers.ConvertGameLength((int)results.Max(x => x.Frames)):hh\\:mm\\:ss})");
             sb.AppendLine($"Step {cfg.Bot1Name} {results.Average(x => x.Bot1AvgStepTime):F2}ms (Min {results.Min(x => x.Bot1AvgStepTime):F2}ms Max {results.Max(x => x.Bot1AvgStepTime):F2}ms)");
@@ -102,18 +102,12 @@
 
             try
             {
-                // Stop any leftover
-                Process p = new Process();
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.FileName = "cmd.exe";
-                p.StartInfo.WorkingDirectory = folder;
-                p.StartInfo.Arguments = $"/C docker stop sc2runner{i}-arena-client-1";
-                p.Start();
-                var output = await p.StandardOutput.ReadToEndAsync();
-                await p.WaitForExitAsync();
-                Thread.Yield();
-                Thread.Sleep(1000);
+                if (Directory.Exists(folder))
+                {
+                    await CLI.RunAsync("docker stop sc2runner{i}-arena-client-1", folder);
+                    Thread.Yield();
+                    Thread.Sleep(1000);
+                }
             }
             catch (Win32Exception)
             {
