@@ -1,9 +1,9 @@
 ﻿{
 	"Bot1Name": "DadBot",
-	"Bot2Name": "loser_bot",
-	"MatchCount": 8,
-	"RunnerCount": 4,
-	"Maps": "BerlingradAIE",
+	"Bot2Name": "DadBotOld",
+	"MatchCount": 50,
+	"RunnerCount": 5,
+	"Maps": "BerlingradAIE, ",
 	"RunnersFolder": "MultiRunner",
 	"ResultsFolder": "MultiRunner\\Results",
 	"StopOnFinish": true

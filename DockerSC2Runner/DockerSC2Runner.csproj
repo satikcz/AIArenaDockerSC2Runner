@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<Folder Include="Bots\" />
+		<Folder Include="Maps\" />
 	</ItemGroup>
 
 	<ItemGroup>

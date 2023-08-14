@@ -52,7 +52,11 @@
 
             var res = await CLI.RunAsync($"docker compose -p runner{runnerIndex} up", folder);
 
-            var results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
+            MatchResults? results = null;
+            RunIOWithRetries(() =>
+            {
+                results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
+            }, $"Unable to parse results from {folder}");
 
             if (results is not null && results.results.Any())
             {
@@ -64,7 +68,30 @@
             {
                 Console.WriteLine($"Game failed: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {cfg.Bot1Name} ({bot1.Race}) vs {cfg.Bot2Name} ({bot2.Race}) on {map}{Environment.NewLine}, {DateTime.Now - start:hh\\:mm\\:ss}");
             }
+
             IsRunning = false;
+        }
+
+        /// <summary>
+        /// Runs IO operation that can fail, in that case operation is retried
+        /// </summary>
+        private void RunIOWithRetries(Action code, string errorMessage, int retries = 10, int sleepTimeMs = 1000)
+        {
+            for (int i = 0; i<retries; i++)
+            {
+                try
+                {
+                    code();
+                    break;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(1000);
+
+                    if (i>0)
+                        Console.WriteLine($"{errorMessage} retry {i}/{retries}");
+                }
+            }
         }
 
         private void SaveReplaysAndLogs(int gameId, string folder)
@@ -75,15 +102,21 @@
                 var logFolder = Path.Combine(folder, @"logs");
 
                 var archiveFolder = Path.Combine(cfg.ResultsFolder, cfg.Start.ToString("yyyy-MM-dd-hh-mm-ss"), $"game_{gameId}");
-
                 // Logs
                 Directory.CreateDirectory(Path.Combine(cfg.ResultsFolder, cfg.Start.ToString("yyyy-MM-dd-hh-mm-ss")));
-                logFolder = Directory.EnumerateDirectories(logFolder).First();
-                Directory.Move(logFolder, archiveFolder);
+
+                RunIOWithRetries(() =>
+                {
+                    logFolder = Directory.EnumerateDirectories(logFolder).First();
+                    Directory.Move(logFolder, archiveFolder); // sometimes still in use
+                }, $"Could not move '{logFolder}' for game {gameId}");
 
                 // Replays
-                var replayFile = Directory.EnumerateFiles(replayFolder, "*.SC2Replay").First();
-                File.Move(replayFile, Path.Combine(archiveFolder, $"game{gameId}.SC2Replay"));
+                RunIOWithRetries(() => 
+                {
+                    var replayFile = Directory.EnumerateFiles(replayFolder, "*.SC2Replay").First();
+                    File.Move(replayFile, Path.Combine(archiveFolder, $"game{gameId}.SC2Replay"));
+                }, $"Could not move '{archiveFolder}' for game {gameId}");
 
                 // Game result
                 File.WriteAllText(Path.Combine(archiveFolder, "result.txt"), Results.Last().ToString());

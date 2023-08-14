@@ -119,7 +119,10 @@
                 Directory.Delete(folder, true);
             }
 
+            // Copy bootstrap
             CopyFilesRecursively("local-play-bootstrap", folder);
+
+            // Copy bots
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot1Name));
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot2Name));
 
