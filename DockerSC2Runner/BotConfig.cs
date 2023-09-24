@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace DockerSC2Runner
 {
@@ -7,18 +6,20 @@ namespace DockerSC2Runner
     {
         public string Race { get; set; }
         public string Type { get; set; }
+        public string Name { get; set; }
         public string RootPath { get; set; }
         public string FileName { get; set; }
 
-        public BotConfig(string race, string type, string rootPath, string fileName)
+        public BotConfig(string race, string type, string rootPath, string fileName, string dirName)
         {
             Race = race;
             Type = type;
-            RootPath = rootPath;
+            Name = dirName;
             FileName = fileName;
+            RootPath = rootPath;
         }
 
-        public static BotConfig Parse(string file)
+        public static BotConfig Parse(string file, string dirName)
         {
             var json = File.ReadAllText(file) ?? string.Empty;
 
@@ -29,7 +30,12 @@ namespace DockerSC2Runner
             var rootPath = Regex.Matches(json, "\"RootPath\"\\s*:\\s*\"(.*)\"")[0].Groups[1].Value;
             var fileName = Regex.Matches(json, "\"FileName\"\\s*:\\s*\"(.*)\"")[0].Groups[1].Value;
 
-            return new BotConfig(race, type, rootPath, fileName);
+            return new BotConfig(race, type, rootPath, fileName, dirName);
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} ({Race}, {Type}), path {RootPath}\\{FileName}";
         }
     }
 }

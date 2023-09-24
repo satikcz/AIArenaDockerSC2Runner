@@ -1,9 +1,9 @@
 ﻿{
 	"Bot1Name": "DadBot",
-	"Bot2Name": "DadBotOld",
+	"Bot2Name": "basic_bot",
 	"MatchCount": 50,
 	"RunnerCount": 5,
-	"Maps": "BerlingradAIE, ",
+	"Maps": "GresvanAIE, GoldenauraAIE, InfestationStationAIE, RoyalBloodAIE, DragonScalesAIE, AncientCisternAIE",
 	"RunnersFolder": "MultiRunner",
 	"ResultsFolder": "MultiRunner\\Results",
 	"StopOnFinish": true

@@ -15,11 +15,31 @@
 
 	<ItemGroup>
 		<Folder Include="Bots\" />
-		<Folder Include="Maps\" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <None Update="config.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\AncientCisternAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\BerlingradAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\DragonScalesAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\GoldenauraAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\GresvanAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\InfestationStationAIE.SC2Map">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Maps\RoyalBloodAIE.SC2Map">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

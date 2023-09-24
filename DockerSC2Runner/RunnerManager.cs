@@ -3,15 +3,23 @@
     public class RunnerManager
     {
         private readonly RunnerConfig cfg;
-        private readonly BotConfig bot1;
-        private readonly BotConfig bot2;
 
         private readonly RunnerInstance[] runnerInstances;
 
+        private readonly List<BotConfig> botConfigs = new List<BotConfig>();
+
         public RunnerManager(RunnerConfig cfg)
         {
-            bot1 = BotConfig.Parse(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name, RunnerConfig.BotJsonFile));
-            bot2 = BotConfig.Parse(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name, RunnerConfig.BotJsonFile));
+            foreach (var dir in Directory.EnumerateDirectories(RunnerConfig.BotsFolder))
+            {
+                var bot = BotConfig.Parse(Path.Combine(dir, RunnerConfig.BotJsonFile), dir.Split('\\').Last());
+
+                if (bot is not null)
+                {
+                    botConfigs.Add(bot);
+                }
+            }
+
             this.cfg = cfg;
 
             runnerInstances = new RunnerInstance[cfg.RunnerCount];
@@ -22,6 +30,12 @@
         {
             BootstrapGitClonner bootstrap = new BootstrapGitClonner();
             bootstrap.CloneBootstrap(Directory.GetCurrentDirectory());
+
+            // Copy maps to bootstrap
+            foreach (var file in Directory.EnumerateFiles($"{Directory.GetCurrentDirectory()}\\Maps", "*.sc2map")) 
+            {
+                File.Copy(file, $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Maps\\{Path.GetFileName(file)}", true);
+            }
 
             for (int i = 0; i < cfg.RunnerCount; i++)
             {
@@ -126,7 +140,7 @@
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot1Name));
             CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot2Name));
 
-            runnerInstances[i-1] = new RunnerInstance(folder, i, cfg, bot1, bot2);
+            runnerInstances[i-1] = new RunnerInstance(folder, i, cfg, botConfigs.First(x=>x.Name == cfg.Bot1Name), botConfigs.First(x => x.Name == cfg.Bot2Name));
         }
 
         private static void CopyFilesRecursively(string sourcePath, string targetPath)
