@@ -1,9 +1,7 @@
 ﻿global using DockerSC2Runner;
 global using System.Text.Json;
 global using DockerSC2Runner.Results;
-global using System;
 global using System.Diagnostics;
-global using System.Reflection;
 global using System.Text;
 global using System.ComponentModel;
 
@@ -15,8 +13,15 @@ if (runnerCfg == null)
     return;
 }
 
-var runner = new RunnerManager(runnerCfg);
-runner.Run();
+Console.WriteLine("Initializing");
+Console.WriteLine($"{runnerCfg.Bot1Name} vs {runnerCfg.Bot2Name}");
+Console.WriteLine($"Maps: {string.Join(' ', runnerCfg.Maps)}");
+Console.WriteLine($"{runnerCfg.MatchCount} matches on {runnerCfg.RunnerCount} runners");
+Console.WriteLine($"===========================");
+Console.WriteLine($"");
+
+var runnerManager = new RunnerManager(runnerCfg);
+runnerManager.Run();
 
 Console.Beep();
 

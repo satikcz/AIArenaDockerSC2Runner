@@ -24,19 +24,47 @@
 
             runnerInstances = new RunnerInstance[cfg.RunnerCount];
             Prepare();
+
+            Console.WriteLine($"Runners ready");
+            Console.WriteLine($"=============");
+            Console.WriteLine($"");
+        }
+
+        private void CopyMapsToBootstrapDir()
+        {
+            Console.WriteLine("Copying maps");
+            foreach (var file in Directory.EnumerateFiles($"{Directory.GetCurrentDirectory()}\\Maps", "*.sc2map"))
+            {
+                File.Copy(file, $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Maps\\{Path.GetFileName(file)}", true);
+                Console.WriteLine($"  {Path.GetFileNameWithoutExtension(file)}");
+            }
+        }
+
+        private void CopyBotsToBootstrapDir()
+        {
+            if (cfg.Bot1Name == "?" || cfg.Bot2Name == "?")
+            {
+                Console.WriteLine("Copying all bots");
+                CopyFilesRecursively($"{Directory.GetCurrentDirectory()}\\Bots", $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Bots");
+            }
+            else
+            {
+                Console.WriteLine($"Copying {cfg.Bot1Name} and {cfg.Bot2Name}");
+                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine($"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot1Name));
+                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine($"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot2Name));
+            }
         }
 
         public void Prepare()
         {
+            Console.WriteLine("Preparing runner environment");
             BootstrapGitClonner bootstrap = new BootstrapGitClonner();
             bootstrap.CloneBootstrap(Directory.GetCurrentDirectory());
 
-            // Copy maps to bootstrap
-            foreach (var file in Directory.EnumerateFiles($"{Directory.GetCurrentDirectory()}\\Maps", "*.sc2map")) 
-            {
-                File.Copy(file, $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Maps\\{Path.GetFileName(file)}", true);
-            }
+            CopyMapsToBootstrapDir();
+            CopyBotsToBootstrapDir();
 
+            Console.WriteLine($"Preparing {cfg.RunnerCount} runners");
             for (int i = 0; i < cfg.RunnerCount; i++)
             {
                 _ = PrepareRunnerAsync(i + 1);
@@ -136,11 +164,9 @@
             // Copy bootstrap
             CopyFilesRecursively("local-play-bootstrap", folder);
 
-            // Copy bots
-            CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot1Name));
-            CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine(folder, RunnerConfig.BotsFolder, cfg.Bot2Name));
-
             runnerInstances[i-1] = new RunnerInstance(folder, i, cfg, botConfigs.First(x=>x.Name == cfg.Bot1Name), botConfigs.First(x => x.Name == cfg.Bot2Name));
+
+            Console.WriteLine($"Runner {i} prepared");
         }
 
         private static void CopyFilesRecursively(string sourcePath, string targetPath)
