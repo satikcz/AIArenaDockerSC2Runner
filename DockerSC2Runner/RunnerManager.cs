@@ -8,6 +8,8 @@
 
         private readonly List<BotConfig> botConfigs = new List<BotConfig>();
 
+        private readonly Random random = new Random();
+
         public RunnerManager(RunnerConfig cfg)
         {
             foreach (var dir in Directory.EnumerateDirectories(RunnerConfig.BotsFolder))
@@ -77,6 +79,11 @@
             }
         }
 
+        private BotConfig GetRandomBot()
+        {
+            return botConfigs[random.Next(botConfigs.Count)];
+        }
+
         public void Run()
         {
             DateTime start = DateTime.Now;
@@ -91,7 +98,9 @@
                     Thread.Yield();
                 }
 
-                freeRunner.RunGame(iGame);
+                var bot1 = cfg.Bot1Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot1Name);
+                var bot2 = cfg.Bot2Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot2Name);
+                freeRunner.RunGame(iGame, bot1, bot2);
             }
 
             while (runnerInstances.Any(r => r.IsRunning))
@@ -164,7 +173,7 @@
             // Copy bootstrap
             CopyFilesRecursively("local-play-bootstrap", folder);
 
-            runnerInstances[i-1] = new RunnerInstance(folder, i, cfg, botConfigs.First(x=>x.Name == cfg.Bot1Name), botConfigs.First(x => x.Name == cfg.Bot2Name));
+            runnerInstances[i-1] = new RunnerInstance(folder, i, cfg);
 
             Console.WriteLine($"Runner {i} prepared");
         }
