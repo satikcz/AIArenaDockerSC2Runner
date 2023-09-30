@@ -30,7 +30,7 @@
         {
             var sb = new StringBuilder(500);
             sb.AppendLine("# Bot1 ID, Bot1 name, Bot1 race, Bot1 type, Bot2 ID, Bot2 name, Bot2 race, Bot2 type, Map");
-            sb.AppendLine($"1,{bot1.Name},{bot1.Race[0]},{bot1.Type},2,{bot1.Name},{bot2.Race[0]},{bot2.Type},{map}");
+            sb.AppendLine($"1,{bot1.Name},{bot1.Race[0]},{bot1.Type},2,{bot2.Name},{bot2.Race[0]},{bot2.Type},{map}");
 
             File.WriteAllText(Path.Combine(folder, "matches"), sb.ToString());
         }

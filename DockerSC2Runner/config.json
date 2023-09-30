@@ -1,10 +1,10 @@
 ﻿{
-	"Bot1Name": "DadBot",
+	"Bot1Name": "loser_bot",
 	"Bot2Name": "?",
-	"MatchCount": 50,
+	"MatchCount": 100,
 	"RunnerCount": 5,
 	"Maps": "GresvanAIE, GoldenauraAIE, InfestationStationAIE, RoyalBloodAIE, DragonScalesAIE, AncientCisternAIE",
-	"RunnersFolder": "MultiRunner",
-	"ResultsFolder": "MultiRunner\\Results",
+	"RunnersFolder": "C:\\Temp\\MultiRunner",
+	"ResultsFolder": "C:\\Temp\\MultiRunner\\Results",
 	"StopOnFinish": true
 }

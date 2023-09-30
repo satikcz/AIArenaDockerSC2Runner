@@ -19,8 +19,11 @@ namespace DockerSC2Runner
             RootPath = rootPath;
         }
 
-        public static BotConfig Parse(string file, string dirName)
+        public static BotConfig? Parse(string file, string dirName)
         {
+            if (!File.Exists(file))
+                return null;
+
             var json = File.ReadAllText(file) ?? string.Empty;
 
             var options = RegexOptions.IgnoreCase | RegexOptions.Compiled;// | RegexOptions.ExplicitCapture;

@@ -14,11 +14,18 @@
         {
             foreach (var dir in Directory.EnumerateDirectories(RunnerConfig.BotsFolder))
             {
-                var bot = BotConfig.Parse(Path.Combine(dir, RunnerConfig.BotJsonFile), dir.Split('\\').Last());
-
-                if (bot is not null)
+                try
                 {
-                    botConfigs.Add(bot);
+                    var bot = BotConfig.Parse(Path.Combine(dir, RunnerConfig.BotJsonFile), dir.Split('\\').Last());
+
+                    if (bot is not null)
+                    {
+                        botConfigs.Add(bot);
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine($"Unable to parse ladderbots.json for {dir}");
                 }
             }
 
@@ -34,26 +41,29 @@
 
         private void CopyMapsToBootstrapDir()
         {
+            var mapsTargetDir = Path.Combine(cfg.RunnersFolder, BootstrapGitClonner.BootstrapDir, "Maps");
             Console.WriteLine("Copying maps");
+            Directory.CreateDirectory(mapsTargetDir);
             foreach (var file in Directory.EnumerateFiles($"{Directory.GetCurrentDirectory()}\\Maps", "*.sc2map"))
             {
-                File.Copy(file, $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Maps\\{Path.GetFileName(file)}", true);
+                File.Copy(file, $"{Path.Combine(mapsTargetDir, Path.GetFileName(file))}", true);
                 Console.WriteLine($"  {Path.GetFileNameWithoutExtension(file)}");
             }
         }
 
         private void CopyBotsToBootstrapDir()
         {
+            var botsTargetDir = Path.Combine(cfg.RunnersFolder, BootstrapGitClonner.BootstrapDir, "Bots");
             if (cfg.Bot1Name == "?" || cfg.Bot2Name == "?")
             {
                 Console.WriteLine("Copying all bots");
-                CopyFilesRecursively($"{Directory.GetCurrentDirectory()}\\Bots", $"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}\\Bots");
+                CopyFilesRecursively($"{Directory.GetCurrentDirectory()}\\Bots", $"{cfg.RunnersFolder}\\{BootstrapGitClonner.BootstrapDir}\\Bots");
             }
             else
             {
                 Console.WriteLine($"Copying {cfg.Bot1Name} and {cfg.Bot2Name}");
-                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine($"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot1Name));
-                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine($"{Directory.GetCurrentDirectory()}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot2Name));
+                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot1Name), Path.Combine($"{cfg.RunnersFolder}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot1Name));
+                CopyFilesRecursively(Path.Combine(RunnerConfig.BotsFolder, cfg.Bot2Name), Path.Combine($"{cfg.RunnersFolder}\\{BootstrapGitClonner.BootstrapDir}", RunnerConfig.BotsFolder, cfg.Bot2Name));
             }
         }
 
@@ -61,7 +71,7 @@
         {
             Console.WriteLine("Preparing runner environment");
             BootstrapGitClonner bootstrap = new BootstrapGitClonner();
-            bootstrap.CloneBootstrap(Directory.GetCurrentDirectory());
+            bootstrap.CloneBootstrap(Path.Combine(cfg.RunnersFolder));
 
             CopyMapsToBootstrapDir();
             CopyBotsToBootstrapDir();
@@ -99,7 +109,8 @@
                 }
 
                 var bot1 = cfg.Bot1Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot1Name);
-                var bot2 = cfg.Bot2Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot2Name);
+                //var bot2 = cfg.Bot2Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot2Name);
+                var bot2 = botConfigs[iGame - 1];
                 freeRunner.RunGame(iGame, bot1, bot2);
             }
 
@@ -128,19 +139,26 @@
                 sb.AppendLine($"{(index++).ToString().PadLeft(3)}/{results.Count()} {summary}");
             }
             sb.AppendLine(new string('=', 20));
-            sb.AppendLine($"Average game length: {results.Average(x => x.Frames)} frames (Min {results.Min(x => x.Frames)} frames Max {results.Max(x => x.Frames)} frames)");
-            sb.AppendLine($"Average game length: {Helpers.ConvertGameLength((int)results.Average(x => x.Frames)):hh\\:mm\\:ss} (Min {Helpers.ConvertGameLength((int)results.Min(x => x.Frames)):hh\\:mm\\:ss} Max {Helpers.ConvertGameLength((int)results.Max(x => x.Frames)):hh\\:mm\\:ss})");
-            sb.AppendLine($"Step {cfg.Bot1Name} {results.Average(x => x.Bot1AvgStepTime):F2}ms (Min {results.Min(x => x.Bot1AvgStepTime):F2}ms Max {results.Max(x => x.Bot1AvgStepTime):F2}ms)");
-            sb.AppendLine($"Step {cfg.Bot2Name} {results.Average(x => x.Bot2AvgStepTime):F2}ms (Min {results.Min(x => x.Bot2AvgStepTime):F2}ms Max {results.Max(x => x.Bot2AvgStepTime):F2}ms)");
-
-            sb.AppendLine("Result summary:");
-            foreach (GameResult result in Enum.GetValues(typeof(GameResult)))
+            if (results.Any())
             {
-                var count = results.Count(x => x.Result == result);
-                if (count > 0)
+                sb.AppendLine($"Average game length: {results.Average(x => x.Frames)} frames (Min {results.Min(x => x.Frames)} frames Max {results.Max(x => x.Frames)} frames)");
+                sb.AppendLine($"Average game length: {Helpers.ConvertGameLength((int)results.Average(x => x.Frames)):hh\\:mm\\:ss} (Min {Helpers.ConvertGameLength((int)results.Min(x => x.Frames)):hh\\:mm\\:ss} Max {Helpers.ConvertGameLength((int)results.Max(x => x.Frames)):hh\\:mm\\:ss})");
+                sb.AppendLine($"Step {cfg.Bot1Name} {results.Average(x => x.Bot1AvgStepTime):F2}ms (Min {results.Min(x => x.Bot1AvgStepTime):F2}ms Max {results.Max(x => x.Bot1AvgStepTime):F2}ms)");
+                sb.AppendLine($"Step {cfg.Bot2Name} {results.Average(x => x.Bot2AvgStepTime):F2}ms (Min {results.Min(x => x.Bot2AvgStepTime):F2}ms Max {results.Max(x => x.Bot2AvgStepTime):F2}ms)");
+
+                sb.AppendLine("Result summary:");
+                foreach (GameResult result in Enum.GetValues(typeof(GameResult)))
                 {
-                    sb.AppendLine($"{count} {result}");
+                    var count = results.Count(x => x.Result == result);
+                    if (count > 0)
+                    {
+                        sb.AppendLine($"{count} {result}");
+                    }
                 }
+            }
+            else
+            {
+                Console.WriteLine("No results !!!");
             }
 
             Console.WriteLine(sb.ToString());
@@ -183,13 +201,20 @@
             //Now Create all of the directories
             foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
             {
-                Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
+                if (dirPath.EndsWith(".git", StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                if (!Directory.Exists(dirPath.Replace(sourcePath, targetPath)))
+                    Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
             }
 
             //Copy all the files & Replaces any files with the same name
             foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
             {
-                File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+                if (!File.Exists(newPath.Replace(sourcePath, targetPath)))
+                {
+                    File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+                }
             }
         }
     }

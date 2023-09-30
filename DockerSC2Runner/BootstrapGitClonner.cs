@@ -11,8 +11,9 @@
         {
             try
             {
+                var path = Path.Combine(workingDir, BootstrapDir);
                 string res = string.Empty;
-                if (!Directory.Exists(BootstrapDir))
+                if (!Directory.Exists(Path.Combine(workingDir, BootstrapDir)))
                 {
                     res = CLI.Run($"git clone {repoPath} --recurse-submodules", workingDir);
                 }
