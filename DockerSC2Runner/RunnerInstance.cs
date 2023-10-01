@@ -37,32 +37,39 @@
 
         private async Task RunGameAsync(int gameId, BotConfig bot1, BotConfig bot2)
         {
-            var maps = cfg.Maps.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-            var map = maps[random.Next(maps.Count())];
-
-            PrepareMatchesFile(map, bot1, bot2);
-
-            Console.WriteLine($"Starting game: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}");
-
-            DateTime start = DateTime.Now;
-
-            var res = await CLI.RunAsync($"docker compose -p runner{runnerIndex} up", folder);
-
-            MatchResults? results = null;
-            RunIOWithRetries(() =>
+            try
             {
-                results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
-            }, $"Unable to parse results from {folder}");
+                var maps = cfg.Maps.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                var map = maps[random.Next(maps.Count())];
 
-            if (results is not null && results.results.Any())
-            {
-                Results.Add(new GameSummary(results.results.Last(), map, DateTime.Now - start, bot1.Name, bot2.Name));
-                Console.WriteLine($"Game finished: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
-                SaveReplaysAndLogs(gameId, folder);
+                PrepareMatchesFile(map, bot1, bot2);
+
+                Console.WriteLine($"Starting game: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}");
+
+                DateTime start = DateTime.Now;
+
+                var res = await CLI.RunAsync($"docker compose -p runner{runnerIndex} up", folder);
+
+                MatchResults? results = null;
+                RunIOWithRetries(() =>
+                {
+                    results = JsonSerializer.Deserialize<MatchResults>(File.ReadAllText(Path.Combine(folder, "results.json")));
+                }, $"Unable to parse results from {folder}");
+
+                if (results is not null && results.results.Any())
+                {
+                    Results.Add(new GameSummary(results.results.Last(), map, DateTime.Now - start, bot1.Name, bot2.Name));
+                    Console.WriteLine($"Game finished: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}{Environment.NewLine}  result {Results.Last().Result}, winner {Results.Last().Winner} in {Results.Last().GameLength:hh\\:mm\\:ss}, realtime {DateTime.Now - start:hh\\:mm\\:ss}");
+                    SaveReplaysAndLogs(gameId, folder);
+                }
+                else
+                {
+                    Console.WriteLine($"Game failed: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}{Environment.NewLine}, {DateTime.Now - start:hh\\:mm\\:ss}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Game failed: {gameId}/{cfg.MatchCount}, runner index {runnerIndex}, {bot1.Name} ({bot1.Race}) vs {bot2.Name} ({bot2.Race}) on {map}{Environment.NewLine}, {DateTime.Now - start:hh\\:mm\\:ss}");
+                Console.WriteLine($"Error while running game {gameId} {bot1.Name} vs {bot2.Name}: {ex}");
             }
 
             IsRunning = false;
@@ -80,7 +87,7 @@
                     code();
                     break;
                 }
-                catch (IOException)
+                catch (Exception)
                 {
                     Thread.Sleep(1000);
 
@@ -103,16 +110,18 @@
 
                 RunIOWithRetries(() =>
                 {
-                    logFolder = Directory.EnumerateDirectories(logFolder).First();
-                    Directory.Move(logFolder, archiveFolder); // sometimes still in use
-                }, $"Could not move '{logFolder}' for game {gameId}");
+                    logFolder = Directory.EnumerateDirectories(logFolder).FirstOrDefault();
+                    if (logFolder is not null)
+                        Directory.Move(logFolder, archiveFolder); // sometimes still in use
+                }, $"Could not move logs '{logFolder}' for game {gameId}");
 
                 // Replays
                 RunIOWithRetries(() => 
                 {
-                    var replayFile = Directory.EnumerateFiles(replayFolder, "*.SC2Replay").First();
-                    File.Move(replayFile, Path.Combine(archiveFolder, $"game{gameId}.SC2Replay"));
-                }, $"Could not move '{archiveFolder}' for game {gameId}");
+                    var replayFile = Directory.EnumerateFiles(replayFolder, "*.SC2Replay").FirstOrDefault();
+                    if (replayFile is not null)
+                        File.Move(replayFile, Path.Combine(archiveFolder, $"game{gameId}.SC2Replay"));
+                }, $"Could not move replays '{archiveFolder}' for game {gameId}");
 
                 // Game result
                 File.WriteAllText(Path.Combine(archiveFolder, "result.txt"), Results.Last().ToString());

@@ -108,9 +108,9 @@
                     Thread.Yield();
                 }
 
-                var bot1 = cfg.Bot1Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot1Name);
-                //var bot2 = cfg.Bot2Name == "?" ? GetRandomBot() : botConfigs.First(x => x.Name == cfg.Bot2Name);
-                var bot2 = botConfigs[iGame - 1];
+                // ? - random bot, # - all bots one after each other, sequentially
+                var bot1 = cfg.Bot1Name == "?" ? GetRandomBot() : (cfg.Bot1Name == "#" ? botConfigs[(iGame - 1) % botConfigs.Count] : botConfigs.First(x => x.Name == cfg.Bot1Name));
+                var bot2 = cfg.Bot2Name == "?" ? GetRandomBot() : (cfg.Bot1Name == "#" ? botConfigs[(iGame - 1) % botConfigs.Count] : botConfigs.First(x => x.Name == cfg.Bot2Name));
                 freeRunner.RunGame(iGame, bot1, bot2);
             }
 
@@ -178,14 +178,21 @@
                     Thread.Sleep(1000);
                 }
             }
-            catch (Win32Exception)
+            catch
             {
 
             }
 
-            if (Directory.Exists(folder))
+            try
             {
-                Directory.Delete(folder, true);
+                if (Directory.Exists(folder))
+                {
+                    Directory.Delete(folder, true);
+                }
+            }
+            catch
+            {
+
             }
 
             // Copy bootstrap
@@ -198,23 +205,33 @@
 
         private static void CopyFilesRecursively(string sourcePath, string targetPath)
         {
-            //Now Create all of the directories
-            foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+            try
             {
-                if (dirPath.EndsWith(".git", StringComparison.InvariantCultureIgnoreCase))
-                    continue;
+                if (!Directory.Exists(targetPath))
+                    Directory.CreateDirectory(targetPath);
 
-                if (!Directory.Exists(dirPath.Replace(sourcePath, targetPath)))
-                    Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
-            }
-
-            //Copy all the files & Replaces any files with the same name
-            foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
-            {
-                if (!File.Exists(newPath.Replace(sourcePath, targetPath)))
+                //Now Create all of the directories
+                foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
                 {
-                    File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+                    if (dirPath.EndsWith(".git", StringComparison.InvariantCultureIgnoreCase))
+                        continue;
+
+                    if (!Directory.Exists(dirPath.Replace(sourcePath, targetPath)))
+                        Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
                 }
+
+                //Copy all the files & Replaces any files with the same name
+                foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
+                {
+                    if (!File.Exists(newPath.Replace(sourcePath, targetPath)))
+                    {
+                        File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {  
+                Console.WriteLine(ex);
             }
         }
     }
